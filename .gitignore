@@ -3,6 +3,7 @@
 *.swp
 .git-commit
 .git-commit.tmp
+*.jar
 /cli/config/configuration-acrn.toml
 /cli/config/configuration-fc.toml
 /cli/config/configuration-nemu.toml
