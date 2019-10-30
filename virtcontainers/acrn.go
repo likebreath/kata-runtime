@@ -731,7 +731,11 @@ func (a *Acrn) check() error {
 }
 
 func (a *Acrn) generateSocket(id string, useVsock bool) (interface{}, error) {
-	return generateVMSocket(id, useVsock)
+
+	if useVsock {
+		return nil, fmt.Errorf("vsock not supported")
+	}
+	return generateVMSocket(id, nil)
 }
 
 // GetACRNUUIDBytes returns UUID bytes that is used for VM creation

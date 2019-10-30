@@ -697,11 +697,26 @@ func getHypervisorPid(h hypervisor) int {
 	return pids[0]
 }
 
-func generateVMSocket(id string, useVsock bool) (interface{}, error) {
-	if useVsock {
+type vsockInfo struct {
+	hybrid bool
+}
+
+func generateVMSocket(id string, vsock *vsockInfo) (interface{}, error) {
+	if vsock != nil {
 		vhostFd, contextID, err := utils.FindContextID()
 		if err != nil {
 			return nil, err
+		}
+
+		if vsock.hybrid {
+			path, err := utils.BuildSocketPath(filepath.Join(store.RunVMStoragePath(), id), defaultSocketName)
+			if err != nil {
+				return nil, err
+			}
+			return types.HybridVSock{
+				UdsPath: path,
+				Port:    uint32(vSockPort),
+			}, nil
 		}
 
 		return types.VSock{

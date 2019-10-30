@@ -2027,5 +2027,9 @@ func (q *qemu) check() error {
 }
 
 func (q *qemu) generateSocket(id string, useVsock bool) (interface{}, error) {
-	return generateVMSocket(id, useVsock)
+	var sinfo *vsockInfo
+	if useVsock {
+		sinfo = &vsockInfo{hybrid: false}
+	}
+	return generateVMSocket(id, sinfo)
 }
