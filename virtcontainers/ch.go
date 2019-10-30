@@ -28,6 +28,21 @@ type cloudHypervisor struct {
 
 // INIT hypervisor interface implementation functions
 func (c *cloudHypervisor) createSandbox(ctx context.Context, id string, networkNS NetworkNamespace, hypervisorConfig *HypervisorConfig, store *store.VCStore) error {
+	c.Logger().Debug("Creating Sandbox for dor cloud-hypervisor")
+
+	err := hypervisorConfig.valid()
+	if err != nil {
+		return err
+	}
+
+	c.id = id
+	c.store = store
+	c.config = *hypervisorConfig
+	c.state.apiSocket, err = c.generateAPISocket()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
