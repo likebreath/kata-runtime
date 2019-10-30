@@ -2,6 +2,7 @@ package virtcontainers
 
 import (
 	"context"
+	"os/exec"
 
 	persistapi "github.com/kata-containers/runtime/virtcontainers/persist/api"
 	"github.com/kata-containers/runtime/virtcontainers/store"
@@ -47,6 +48,16 @@ func (c *cloudHypervisor) createSandbox(ctx context.Context, id string, networkN
 }
 
 func (c *cloudHypervisor) startSandbox(timeout int) error {
+	var args []string
+	var cmd *exec.Cmd
+	args = []string{"--api-socket", c.state.apiSocket}
+	cmd = exec.Command(c.config.HypervisorPath, args...)
+	c.Logger().WithField("hypervisor cmd", cmd.Path).Debug()
+	c.Logger().WithField("hypervisor args", cmd.Args).Debug()
+	if err := cmd.Start(); err != nil {
+		c.Logger().WithField("Error starting hypervisor", err).Debug()
+		return err
+	}
 	return nil
 }
 func (c *cloudHypervisor) stopSandbox() error {
