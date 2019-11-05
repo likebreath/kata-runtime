@@ -49,6 +49,7 @@ var (
 const (
 	// supported hypervisor component types
 	firecrackerHypervisorTableType = "firecracker"
+	ichHypervisorTableType         = "ich"
 	qemuHypervisorTableType        = "qemu"
 	acrnHypervisorTableType        = "acrn"
 
@@ -638,7 +639,6 @@ func newQemuHypervisorConfig(h hypervisor) (vc.HypervisorConfig, error) {
 		GuestHookPath:           h.guestHookPath(),
 	}, nil
 }
-
 func newAcrnHypervisorConfig(h hypervisor) (vc.HypervisorConfig, error) {
 	hypervisor, err := h.path()
 	if err != nil {
@@ -700,6 +700,96 @@ func newAcrnHypervisorConfig(h hypervisor) (vc.HypervisorConfig, error) {
 	}, nil
 }
 
+func newIchHypervisorConfig(h hypervisor) (vc.HypervisorConfig, error) {
+	hypervisor, err := h.path()
+	if err != nil {
+		return vc.HypervisorConfig{}, err
+	}
+
+	kernel, err := h.kernel()
+	if err != nil {
+		return vc.HypervisorConfig{}, err
+	}
+
+	initrd, image, err := h.getInitrdAndImage()
+	if err != nil {
+		return vc.HypervisorConfig{}, err
+	}
+
+	if image != "" && initrd != "" {
+		return vc.HypervisorConfig{},
+			errors.New("having both an image and an initrd defined in the configuration file is not supported")
+	}
+
+	if image == "" && initrd == "" {
+		return vc.HypervisorConfig{},
+			errors.New("either image or initrd must be defined in the configuration file")
+	}
+
+	firmware, err := h.firmware()
+	if err != nil {
+		return vc.HypervisorConfig{}, err
+	}
+
+	machineAccelerators := h.machineAccelerators()
+	kernelParams := h.kernelParams()
+	machineType := h.machineType()
+
+	blockDriver, err := h.blockDeviceDriver()
+	if err != nil {
+		return vc.HypervisorConfig{}, err
+	}
+
+	sharedFS, err := h.sharedFS()
+	if err != nil {
+		return vc.HypervisorConfig{}, err
+	}
+
+	if sharedFS == config.VirtioFS && h.VirtioFSDaemon == "" {
+		return vc.HypervisorConfig{},
+			errors.New("cannot enable virtio-fs without daemon path in configuration file")
+	}
+
+	return vc.HypervisorConfig{
+		HypervisorPath:          hypervisor,
+		KernelPath:              kernel,
+		InitrdPath:              initrd,
+		ImagePath:               image,
+		FirmwarePath:            firmware,
+		MachineAccelerators:     machineAccelerators,
+		KernelParams:            vc.DeserializeParams(strings.Fields(kernelParams)),
+		HypervisorMachineType:   machineType,
+		NumVCPUs:                h.defaultVCPUs(),
+		DefaultMaxVCPUs:         h.defaultMaxVCPUs(),
+		MemorySize:              h.defaultMemSz(),
+		MemSlots:                h.defaultMemSlots(),
+		MemOffset:               h.defaultMemOffset(),
+		EntropySource:           h.GetEntropySource(),
+		DefaultBridges:          h.defaultBridges(),
+		DisableBlockDeviceUse:   h.DisableBlockDeviceUse,
+		SharedFS:                sharedFS,
+		VirtioFSDaemon:          h.VirtioFSDaemon,
+		VirtioFSCacheSize:       h.VirtioFSCacheSize,
+		VirtioFSCache:           h.VirtioFSCache,
+		MemPrealloc:             h.MemPrealloc,
+		HugePages:               h.HugePages,
+		FileBackedMemRootDir:    h.FileBackedMemRootDir,
+		Mlock:                   !h.Swap,
+		Debug:                   h.Debug,
+		DisableNestingChecks:    h.DisableNestingChecks,
+		BlockDeviceDriver:       blockDriver,
+		BlockDeviceCacheSet:     h.BlockDeviceCacheSet,
+		BlockDeviceCacheDirect:  h.BlockDeviceCacheDirect,
+		BlockDeviceCacheNoflush: h.BlockDeviceCacheNoflush,
+		EnableIOThreads:         h.EnableIOThreads,
+		Msize9p:                 h.msize9p(),
+		HotplugVFIOOnRootBus:    h.HotplugVFIOOnRootBus,
+		DisableVhostNet:         h.DisableVhostNet,
+		GuestHookPath:           h.guestHookPath(),
+		UseVSock:                true,
+	}, nil
+}
+
 func newFactoryConfig(f factory) (oci.FactoryConfig, error) {
 	if f.TemplatePath == "" {
 		f.TemplatePath = defaultTemplatePath
@@ -743,8 +833,10 @@ func updateRuntimeConfigHypervisor(configPath string, tomlConf tomlConfig, confi
 		case acrnHypervisorTableType:
 			config.HypervisorType = vc.AcrnHypervisor
 			hConfig, err = newAcrnHypervisorConfig(hypervisor)
+		case ichHypervisorTableType:
+			config.HypervisorType = vc.IchHypervisor
+			hConfig, err = newIchHypervisorConfig(hypervisor)
 		}
-
 		if err != nil {
 			return fmt.Errorf("%v: %v", configPath, err)
 		}
@@ -990,7 +1082,7 @@ func initConfig() (config oci.RuntimeConfig, err error) {
 		ProxyType:        defaultProxy,
 		ShimType:         defaultShim,
 	}
-
+	
 	return config, nil
 }
 
@@ -1052,7 +1144,6 @@ func LoadConfiguration(configPath string, ignoreLogging, builtIn bool) (resolved
 
 	// use no proxy if HypervisorConfig.UseVSock is true
 	if config.HypervisorConfig.UseVSock {
-		kataUtilsLogger.Info("VSOCK supported, configure to not use proxy")
 		config.ProxyType = vc.NoProxyType
 		config.ProxyConfig = vc.ProxyConfig{Debug: config.Debug}
 	}
@@ -1222,6 +1313,8 @@ func checkHypervisorConfig(config vc.HypervisorConfig) error {
 			}
 		}
 	}
+	
+	
 
 	return nil
 }

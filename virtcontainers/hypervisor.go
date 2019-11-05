@@ -41,6 +41,10 @@ const (
 
 	// AcrnHypervisor is the ACRN hypervisor.
 	AcrnHypervisor HypervisorType = "acrn"
+	
+	// IchHypervisor is the FC hypervisor.
+	IchHypervisor HypervisorType = "ich"
+
 
 	// MockHypervisor is a mock hypervisor for testing purposes
 	MockHypervisor HypervisorType = "mock"
@@ -152,6 +156,9 @@ func (hType *HypervisorType) Set(value string) error {
 	case "acrn":
 		*hType = AcrnHypervisor
 		return nil
+	case "ich":
+		*hType = IchHypervisor
+		return nil		
 	case "mock":
 		*hType = MockHypervisor
 		return nil
@@ -169,6 +176,8 @@ func (hType *HypervisorType) String() string {
 		return string(FirecrackerHypervisor)
 	case AcrnHypervisor:
 		return string(AcrnHypervisor)
+	case IchHypervisor:
+		return string(IchHypervisor)
 	case MockHypervisor:
 		return string(MockHypervisor)
 	default:
@@ -185,6 +194,8 @@ func newHypervisor(hType HypervisorType) (hypervisor, error) {
 		return &firecracker{}, nil
 	case AcrnHypervisor:
 		return &Acrn{}, nil
+	case IchHypervisor:
+		return &cloudHypervisor{}, nil
 	case MockHypervisor:
 		return &mockHypervisor{}, nil
 	default:

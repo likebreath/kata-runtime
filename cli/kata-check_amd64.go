@@ -107,6 +107,8 @@ func setCPUtype(hypervisorType vc.HypervisorType) error {
 		switch hypervisorType {
 		case "firecracker":
 			fallthrough
+		case "ich":
+			fallthrough
 		case "qemu":
 			archRequiredCPUFlags = map[string]string{
 				cpuFlagVMX:    "Virtualization support",
@@ -290,6 +292,8 @@ func archHostCanCreateVMContainer(hypervisorType vc.HypervisorType) error {
 
 	switch hypervisorType {
 	case "qemu":
+		fallthrough
+	case "ich":
 		fallthrough
 	case "firecracker":
 		return kvmIsUsable()
