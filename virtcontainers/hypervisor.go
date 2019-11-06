@@ -42,7 +42,7 @@ const (
 	// AcrnHypervisor is the ACRN hypervisor.
 	AcrnHypervisor HypervisorType = "acrn"
 	
-	// IchHypervisor is the FC hypervisor.
+	// IchHypervisor is the ICH hypervisor.
 	IchHypervisor HypervisorType = "ich"
 
 

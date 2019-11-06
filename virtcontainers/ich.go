@@ -48,6 +48,7 @@ const (
 	ichTimeout            = 10
 	ichSocket             = "ich.sock"
 	vfsdSocket            = "virtiofsd.sock"
+	apiSocket             = "cloud-hypervisor.9166"
 	ichStopSandboxTimeout = 15
 )
 
@@ -245,6 +246,18 @@ func (ich *cloudHypervisor) createSandbox(ctx context.Context, id string, networ
 	if err != nil {
 		return err
 	}
+	 
+	// Add the http api endpoint to the cloud hypervisor by default
+//	apiSocketPath, err := ich.apiSocketPath(ich.id)
+//	if err != nil {
+//		return err
+//	}
+	
+//	ichConfig.Devices, err = ich.arch.appendApiSocket(ichConfig.Devices, apiSocketPath)
+//	if err != nil {
+//		return err
+//	}
+
 		
 	ich.ichConfig = ichConfig
 	return nil
@@ -679,6 +692,9 @@ func (ich *cloudHypervisor) vfsdFSSocketPath(id string) (string, error) {
 }
 func (ich *cloudHypervisor) vsockSocketPath(id string) (string, error) {
 	return utils.BuildSocketPath(store.RunVMStoragePath(), id, ichSocket)
+}
+func (ich *cloudHypervisor) apiSocketPath(id string) (string, error) {
+	return utils.BuildSocketPath(store.RunVMStoragePath(), id, apiSocket)
 }
 
 func (ich *cloudHypervisor) storeState() error {

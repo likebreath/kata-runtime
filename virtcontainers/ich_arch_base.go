@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	defaultIchPath            = "/opt/ich/bin/cloud-hypervisor"
+	defaultIchPath            = "/usr/local/bin/cloud-hypervisor"
 	defaultIchMachineType     = "x86_64"
 )
 
@@ -41,9 +41,12 @@ type ichArch interface {
 	
 	appendVirtioConsole(devices []govmmIch.Device, consoletype string) ([]govmmIch.Device, error)
 	
+	appendApiSocket(devices []govmmIch.Device, apiSocket string) ([]govmmIch.Device, error)
+	
 	appendVirtualFilesystem(devices []govmmIch.Device, tag string, path string) ([]govmmIch.Device, error)
 	
 	appendMemory(memorySize uint64, path string) (govmmIch.Memory, error)
+	
 	appendProcessors(vcpu uint32) (govmmIch.VCPU, error)
 
 	//capabilities returns the capabilities supported by ICH
@@ -168,6 +171,17 @@ func (ich *ichArchBase) appendVirtioConsole(devices []govmmIch.Device, consolety
 	devices = append(devices,
 		govmmIch.VirtioConsoleDevice{
 			ConsoleType:	validConsoleType,
+		},
+	)
+
+	return devices, nil
+}
+ 
+func (ich *ichArchBase) appendApiSocket(devices []govmmIch.Device, apisocket string) ([]govmmIch.Device, error) {
+	
+	devices = append(devices,
+		govmmIch.ApiEndpointDevice{
+			ApiSocket:	apisocket,
 		},
 	)
 

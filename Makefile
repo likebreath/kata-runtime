@@ -176,13 +176,12 @@ DEFENTROPYSOURCE := /dev/urandom
 
 DEFDISABLEBLOCK := false
 DEFSHAREDFS := virtio-9p
-DEFSHAREDFS_NEMU := virtio-fs
+DEFSHAREDFS_NEMU := virtio-9p
 DEFSHAREDFS_QEMU_VIRTIOFS := virtio-fs
 DEFSHAREDFS_ICH := virtio-fs
-DEFVIRTIOFSDAEMON := $(VIRTIOFSDBINDIR)/virtiofsd-x86_64
+DEFVIRTIOFSDAEMON := $(VIRTIOFSDBINDIR)/virtiofsd
 DEFSHAREDFS_NEMU := virtio-fs
 DEFSHAREDFS_ICH := virtio-fs
-DEFVIRTIOFSDAEMON := $(VIRTIOFSDBINDIR)/virtiofsd-x86_64
 # Default DAX mapping cache size in MiB
 DEFVIRTIOFSCACHESIZE := 1024
 DEFVIRTIOFSCACHE := always
@@ -317,7 +316,7 @@ ifneq (,$(ICHCMD))
     # currently, huge pages are required for virtiofsd support
     DEFENABLEHUGEPAGES_ICH := true
     DEFNETWORKMODEL_ICH := tcfilter
-    KERNELTYPE_ICH = compressed
+    KERNELTYPE_ICH = uncompressed
     KERNEL_NAME_ICH = $(call MAKE_KERNEL_NAME,$(KERNELTYPE_ICH))
     KERNELPATH_ICH = $(KERNELDIR)/$(KERNEL_NAME_ICH)
 endif
@@ -361,6 +360,7 @@ ifneq (,$(ACRNCMD))
     CONFIGS += $(CONFIG_ACRN)
 
     # acrn-specific options (all should be suffixed by "_ACRN")
+    DEFMAXVCPUS_ACRN := 1
     DEFBLOCKSTORAGEDRIVER_ACRN := virtio-blk
     DEFNETWORKMODEL_ACRN := macvtap
     KERNEL_NAME_ACRN = $(call MAKE_KERNEL_NAME,$(KERNELTYPE))
@@ -469,6 +469,7 @@ USER_VARS += SHIMPATH
 USER_VARS += SYSCONFDIR
 USER_VARS += DEFVCPUS
 USER_VARS += DEFMAXVCPUS
+USER_VARS += DEFMAXVCPUS_ACRN
 USER_VARS += DEFMEMSZ
 USER_VARS += DEFMEMSLOTS
 USER_VARS += DEFBRIDGES
@@ -642,6 +643,7 @@ $(GENERATED_FILES): %: %.in $(MAKEFILE_LIST) VERSION .git-commit
 		-e "s|@SHIMPATH@|$(SHIMPATH)|g" \
 		-e "s|@DEFVCPUS@|$(DEFVCPUS)|g" \
 		-e "s|@DEFMAXVCPUS@|$(DEFMAXVCPUS)|g" \
+                -e "s|@DEFMAXVCPUS_ACRN@|$(DEFMAXVCPUS_ACRN)|g" \
 		-e "s|@DEFMEMSZ@|$(DEFMEMSZ)|g" \
 		-e "s|@DEFSHAREDFS_ICH@|$(DEFSHAREDFS_ICH)|g" \
 		-e "s|@DEFMEMSLOTS@|$(DEFMEMSLOTS)|g" \

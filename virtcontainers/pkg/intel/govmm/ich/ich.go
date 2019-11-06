@@ -171,7 +171,7 @@ func (diskdev DiskDevice) IchParams(config *Config) []string {
 	
 	var ichParams []string
 
-	ichParams = append(ichParams, "--disk", diskdev.Path)
+	ichParams = append(ichParams, "--disk", fmt.Sprintf("path=%s", diskdev.Path))
 
 	return ichParams
 }
@@ -297,6 +297,33 @@ func (vcondev VirtioConsoleDevice) Valid() bool {
 	if vcondev.ConsoleType == "" {
 		return false
 	}	// TODO refine
+	return true
+}
+
+/************************************************************************************
+ *
+ *ApiEndpointDevice represents the vmm http api endpoint
+ *
+*************************************************************************************/  
+type ApiEndpointDevice struct {
+
+	ApiSocket string
+
+}
+
+// IchParams returns the ich parameters built out of this network device.
+func (apidev ApiEndpointDevice) IchParams(config *Config) []string {
+	
+	var ichParams []string
+	
+	ichParams = append(ichParams, "--api-socket", apidev.ApiSocket)
+	
+	return ichParams
+}
+
+// Valid returns true if the NetDevice structure is valid and complete.
+func (apidev ApiEndpointDevice) Valid() bool {
+	
 	return true
 }
 
