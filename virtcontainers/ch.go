@@ -3,6 +3,7 @@ package virtcontainers
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
@@ -67,15 +68,7 @@ func (c *cloudHypervisor) createSandbox(ctx context.Context, id string, networkN
 }
 
 func (c *cloudHypervisor) startSandbox(timeout int) error {
-	if err := c.Start(); err != nil {
-		return err
-	}
-
-	if err := c.waitAPIServer(timeout); err != nil {
-		return err
-	}
-
-	if err := c.bootVM(timeout); err != nil {
+	if err := c.Start(timeout); err != nil {
 		return err
 	}
 
@@ -101,6 +94,7 @@ func (c *cloudHypervisor) addDevice(devInfo interface{}, devType deviceType) err
 
 	switch v := devInfo.(type) {
 	case types.Volume:
+		return nil
 		if c.config.SharedFS == config.VirtioFS {
 			return fmt.Errorf("VirtioFS not implemented")
 		} else {
@@ -115,6 +109,7 @@ func (c *cloudHypervisor) addDevice(devInfo interface{}, devType deviceType) err
 		//TODO: fix API to use int64
 		c.vmconfig.Vsock = []chclient.VsockConfig{{Cid: int32(defaultGuestVSockCID), Sock: v.UdsPath}}
 	case Endpoint:
+		return nil
 		return fmt.Errorf("Not implemented Endpoint")
 	case config.BlockDrive:
 		return fmt.Errorf("Not implemented BlockDrive")
@@ -221,7 +216,7 @@ func (c *cloudHypervisor) isRunning() bool {
 	return true
 }
 
-func (c *cloudHypervisor) Start() error {
+func (c *cloudHypervisor) Start(timeout int) error {
 	var args []string
 	var cmd *exec.Cmd
 	args = []string{"--api-socket", c.state.apiSocket}
@@ -230,15 +225,31 @@ func (c *cloudHypervisor) Start() error {
 	cmdOutput := &bytes.Buffer{}
 	cmd.Stdout = cmdOutput
 
+	file, err := os.Create("/tmp/ch-stdout.log")
+	if err != nil {
+		return err
+	}
+
+	defer file.Close()
+	cmd.Stdout = file
+	cmd.Stderr = file
 	c.Logger().WithField("hypervisor cmd", cmd.Path).Debug()
 	c.Logger().WithField("hypervisor args", cmd.Args).Debug()
 
 	if err := cmd.Start(); err != nil {
-		c.Logger().Errorf("%s", string(cmdOutput.Bytes()))
 		c.Logger().WithField("Error starting hypervisor", err).Error()
 		return err
 	}
 	c.state.pid = cmd.Process.Pid
+
+	if err := c.waitAPIServer(timeout); err != nil {
+		return err
+	}
+
+	if err := c.bootVM(timeout); err != nil {
+		return err
+	}
+	//cmd.Wait()
 
 	return nil
 }
@@ -303,8 +314,15 @@ func (c *cloudHypervisor) bootVM(timeout int) error {
 		return err
 	}
 
+	chKernelCmdline := append(commonVirtioblkKernelRootParams, []Param{
+		// TODO refactor with fc
+		{"agent.log_vport", fmt.Sprintf("%d", vSockLogsPort)},
+		{"console", "hvc0"},
+		{"ch_params", "end"},
+	}...)
+	kernelCmdline := append(chKernelCmdline, c.config.KernelParams...)
 	// Get Kernel params
-	strParams := SerializeParams(kernelParams, "=")
+	strParams := SerializeParams(kernelCmdline, "=")
 	kernel_cmdline := strings.Join(strParams, " ")
 
 	// Kernel config
@@ -323,8 +341,8 @@ func (c *cloudHypervisor) bootVM(timeout int) error {
 	//format: int64
 	c.vmconfig.Memory.Size = 536870912
 
-	c.vmconfig.Serial = chclient.ConsoleConfig{Mode: "Tty", File: ""}
-	c.vmconfig.Console = chclient.ConsoleConfig{Mode: "Off", File: ""}
+	c.vmconfig.Console = chclient.ConsoleConfig{Mode: "File", File: "/tmp/chapi.log"}
+	c.vmconfig.Serial = chclient.ConsoleConfig{Mode: "Off"}
 
 	// No default value and goes emtpy
 	c.vmconfig.Rng.Src = "/dev/urandom"
@@ -332,6 +350,11 @@ func (c *cloudHypervisor) bootVM(timeout int) error {
 	c.Logger().Debugf("VMconfig %#v", c.vmconfig)
 
 	cl := c.client()
+	bodyBuf, err := json.Marshal(c.vmconfig)
+	if err != nil {
+		return err
+	}
+	c.Logger().Debugf("%s", string(bodyBuf))
 	_, err = cl.CreateVM(ctx, c.vmconfig)
 
 	if err != nil {
