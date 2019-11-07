@@ -43,7 +43,7 @@ type cloudHypervisor struct {
 
 // INIT hypervisor interface implementation functions
 func (c *cloudHypervisor) createSandbox(ctx context.Context, id string, networkNS NetworkNamespace, hypervisorConfig *HypervisorConfig, vcstore *store.VCStore) error {
-	c.Logger().Debug("Creating Sandbox for for cloud-hypervisor")
+	c.Logger().Debug("Creating Sandbox using cloud-hypervisor")
 
 	err := hypervisorConfig.valid()
 	if err != nil {
@@ -92,32 +92,48 @@ func (c *cloudHypervisor) resumeSandbox() error {
 
 func (c *cloudHypervisor) addDevice(devInfo interface{}, devType deviceType) error {
 
+	devLogger := c.Logger().WithFields(logrus.Fields{
+		"action": "addDevice",
+	})
+
 	switch v := devInfo.(type) {
 	case types.Volume:
-		return nil
-		if c.config.SharedFS == config.VirtioFS {
-			return fmt.Errorf("VirtioFS not implemented")
-		} else {
-			return fmt.Errorf("shared fs method not supported")
+		if c.config.SharedFS != config.VirtioFS {
+			return fmt.Errorf("shared fs method not supported %s", c.config.SharedFS)
 		}
-	case types.Socket:
-
-		return fmt.Errorf("Not implemented Socket")
-	case types.VSock:
-		return fmt.Errorf("Not implemented VSocket")
+		c.vmconfig.Fs = []chclient.FsConfig{
+			{
+				Tag: v.MountTag,
+				// TODO Fix in API to use uint32
+				CacheSize: int32(c.config.VirtioFSCacheSize),
+				//TODO
+				Sock: "TODO",
+				//TODO
+				NumQueues: 1,
+				//TODO
+				QueueSize: 512,
+			},
+		}
+		devLogger.Debug("Adding Volume to hypervisor ", v.HostPath, ":", v.MountTag)
 	case types.HybridVSock:
+		devLogger.Debugf("Adding vsock to hypervisor %s", v.UdsPath)
 		//TODO: fix API to use int64
 		c.vmconfig.Vsock = []chclient.VsockConfig{{Cid: int32(defaultGuestVSockCID), Sock: v.UdsPath}}
 	case Endpoint:
+		switch ep := v.(type) {
+		case *VethEndpoint, *BridgedMacvlanEndpoint, *IPVlanEndpoint:
+			netPair := ep.NetworkPair()
+			devLogger.Debugf("Adding Endpoint to hypervisor: %s", netPair.NetInterworkingModel)
+		case *MacvtapEndpoint:
+			netPair := ep.NetworkPair()
+			devLogger.Debugf("Adding Endpoint to hypervisor: %s", netPair.NetInterworkingModel)
+		default:
+			return fmt.Errorf("Unknown type for endpoint")
+		}
+
 		return nil
-		return fmt.Errorf("Not implemented Endpoint")
-	case config.BlockDrive:
-		return fmt.Errorf("Not implemented BlockDrive")
-	case config.VhostUserDeviceAttrs:
-		return fmt.Errorf("Not implemented VhostUserDeviceAttrs")
-	case config.VFIODev:
-		return fmt.Errorf("Not implemented VFIODev")
 	default:
+		devLogger.Debugf("Adding %s to hypervisor", v)
 		return fmt.Errorf("Not implemented support for %s", v)
 	}
 	return nil
