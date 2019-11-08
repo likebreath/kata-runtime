@@ -13,9 +13,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math"
-	"net"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -603,63 +601,17 @@ func (q *qemu) vhostFSSocketPath(id string) (string, error) {
 	return utils.BuildSocketPath(store.RunVMStoragePath(), id, vhostFSSocket)
 }
 
-func (q *qemu) virtiofsdArgs(fd uintptr) []string {
-	// The daemon will terminate when the vhost-user socket
-	// connection with QEMU closes.  Therefore we do not keep track
-	// of this child process after returning from this function.
-	sourcePath := filepath.Join(kataHostSharedDir(), q.id)
-	args := []string{
-		fmt.Sprintf("--fd=%v", fd),
-		"-o", "source=" + sourcePath,
-		"-o", "cache=" + q.config.VirtioFSCache,
-		"--syslog", "-o", "no_posix_lock"}
-	if q.config.Debug {
-		args = append(args, "-d")
-	} else {
-		args = append(args, "-f")
-	}
-
-	if len(q.config.VirtioFSExtraArgs) != 0 {
-		args = append(args, q.config.VirtioFSExtraArgs...)
-	}
-	return args
-}
-
 func (q *qemu) setupVirtiofsd() (err error) {
-	var listener *net.UnixListener
-	var fd *os.File
-
 	sockPath, err := q.vhostFSSocketPath(q.id)
 	if err != nil {
 		return err
 	}
-
-	listener, err = net.ListenUnix("unix", &net.UnixAddr{
-		Name: sockPath,
-		Net:  "unix",
-	})
+	pid, err := startVirtiofsd(q.id, q.config, sockPath)
 	if err != nil {
 		return err
 	}
-	listener.SetUnlinkOnClose(false)
-
-	fd, err = listener.File()
-	listener.Close() // no longer needed since fd is a dup
-	listener = nil
-	if err != nil {
-		return err
-	}
-
-	const sockFd = 3 // Cmd.ExtraFiles[] fds are numbered starting from 3
-	cmd := exec.Command(q.config.VirtioFSDaemon, q.virtiofsdArgs(sockFd)...)
-	cmd.ExtraFiles = append(cmd.ExtraFiles, fd)
-
-	err = cmd.Start()
-	if err == nil {
-		q.state.VirtiofsdPid = cmd.Process.Pid
-	}
-	fd.Close()
-	return err
+	q.state.VirtiofsdPid = pid
+	return nil
 }
 
 // startSandbox will start the Sandbox's VM.

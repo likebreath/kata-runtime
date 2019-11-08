@@ -9,7 +9,9 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"net"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -41,10 +43,9 @@ const (
 
 	// AcrnHypervisor is the ACRN hypervisor.
 	AcrnHypervisor HypervisorType = "acrn"
-	
+
 	// IchHypervisor is the ICH hypervisor.
 	IchHypervisor HypervisorType = "ich"
-
 
 	// MockHypervisor is a mock hypervisor for testing purposes
 	MockHypervisor HypervisorType = "mock"
@@ -158,7 +159,7 @@ func (hType *HypervisorType) Set(value string) error {
 		return nil
 	case "ich":
 		*hType = IchHypervisor
-		return nil		
+		return nil
 	case "mock":
 		*hType = MockHypervisor
 		return nil
@@ -771,4 +772,54 @@ type hypervisor interface {
 
 	// generate the socket to communicate the host and guest
 	generateSocket(id string, useVsock bool) (interface{}, error)
+}
+
+func startVirtiofsd(id string, config HypervisorConfig, sockPath string) (int, error) {
+	var fd *os.File
+
+	listener, err := net.ListenUnix("unix", &net.UnixAddr{
+		Name: sockPath,
+		Net:  "unix",
+	})
+	if err != nil {
+		return 0, err
+	}
+	listener.SetUnlinkOnClose(false)
+
+	fd, err = listener.File()
+	defer fd.Close()
+	listener.Close() // no longer needed since fd is a dup
+	listener = nil
+	if err != nil {
+		return 0, err
+	}
+
+	const sockFd = 3 // Cmd.ExtraFiles[] fds are numbered starting from 3
+	cmd := exec.Command(config.VirtioFSDaemon, virtiofsdArgs(id, config, sockFd)...)
+	cmd.ExtraFiles = append(cmd.ExtraFiles, fd)
+
+	err = cmd.Start()
+	return cmd.Process.Pid, err
+}
+
+func virtiofsdArgs(id string, config HypervisorConfig, fd uintptr) []string {
+	// The daemon will terminate when the vhost-user socket
+	// connection with QEMU closes.  Therefore we do not keep track
+	// of this child process after returning from this function.
+	sourcePath := filepath.Join(kataHostSharedDir(), id)
+	args := []string{
+		fmt.Sprintf("--fd=%v", fd),
+		"-o", "source=" + sourcePath,
+		"-o", "cache=" + config.VirtioFSCache,
+		"--syslog", "-o", "no_posix_lock"}
+	if config.Debug {
+		args = append(args, "-d")
+	} else {
+		args = append(args, "-f")
+	}
+
+	if len(config.VirtioFSExtraArgs) != 0 {
+		args = append(args, config.VirtioFSExtraArgs...)
+	}
+	return args
 }

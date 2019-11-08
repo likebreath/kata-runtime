@@ -68,6 +68,15 @@ func (c *cloudHypervisor) createSandbox(ctx context.Context, id string, networkN
 }
 
 func (c *cloudHypervisor) startSandbox(timeout int) error {
+	if c.config.SharedFS != config.VirtioFS {
+		return fmt.Errorf("not configured to use virtiofs")
+	}
+
+	_, err := startVirtiofsd(c.id, c.config, c.vmconfig.Fs[0].Sock)
+	if err != nil {
+		return err
+	}
+
 	if err := c.Start(timeout); err != nil {
 		return err
 	}
@@ -98,16 +107,21 @@ func (c *cloudHypervisor) addDevice(devInfo interface{}, devType deviceType) err
 
 	switch v := devInfo.(type) {
 	case types.Volume:
+
 		if c.config.SharedFS != config.VirtioFS {
 			return fmt.Errorf("shared fs method not supported %s", c.config.SharedFS)
+		}
+
+		fsSocket, err := utils.BuildSocketPath(store.RunVMStoragePath(), c.id, "vfs.sock")
+		if err != nil {
+			return err
 		}
 		c.vmconfig.Fs = []chclient.FsConfig{
 			{
 				Tag: v.MountTag,
 				// TODO Fix in API to use uint32
 				CacheSize: int32(c.config.VirtioFSCacheSize),
-				//TODO
-				Sock: "TODO",
+				Sock:      fsSocket,
 				//TODO
 				NumQueues: 1,
 				//TODO
@@ -233,6 +247,7 @@ func (c *cloudHypervisor) isRunning() bool {
 }
 
 func (c *cloudHypervisor) Start(timeout int) error {
+	// start api server
 	var args []string
 	var cmd *exec.Cmd
 	args = []string{"--api-socket", c.state.apiSocket}
@@ -257,6 +272,7 @@ func (c *cloudHypervisor) Start(timeout int) error {
 		return err
 	}
 	c.state.pid = cmd.Process.Pid
+	// end start server
 
 	if err := c.waitAPIServer(timeout); err != nil {
 		return err
