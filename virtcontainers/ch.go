@@ -372,6 +372,7 @@ func (c *cloudHypervisor) bootVM(timeout int) error {
 	// type: integer
 	//format: int64
 	c.vmconfig.Memory.Size = 536870912
+	c.vmconfig.Memory.File = "/dev/shm"
 
 	c.vmconfig.Console = chclient.ConsoleConfig{Mode: "File", File: "/tmp/chapi.log"}
 	c.vmconfig.Serial = chclient.ConsoleConfig{Mode: "Off"}
