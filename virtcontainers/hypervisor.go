@@ -9,13 +9,13 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/kata-containers/runtime/virtcontainers/device/config"
 	persistapi "github.com/kata-containers/runtime/virtcontainers/persist/api"
@@ -775,43 +775,103 @@ type hypervisor interface {
 }
 
 func startVirtiofsd(id string, config HypervisorConfig, sockPath string) (int, error) {
-	var fd *os.File
 
-	listener, err := net.ListenUnix("unix", &net.UnixAddr{
-		Name: sockPath,
-		Net:  "unix",
-	})
+	theArgs := virtiofsdArgs(id, config, sockPath)
+
+	cmd := exec.Command(config.VirtioFSDaemon, theArgs...)
+
+	virtLog.Debug("Running: %s", cmd.Args)
+	cmdOutput, err := cmd.StdoutPipe()
 	if err != nil {
 		return 0, err
-	}
-	listener.SetUnlinkOnClose(false)
 
-	fd, err = listener.File()
-	defer fd.Close()
-	listener.Close() // no longer needed since fd is a dup
-	listener = nil
-	if err != nil {
+	}
+	cmd.Stderr = cmd.Stdout
+
+	if err = cmd.Start(); err != nil {
 		return 0, err
+
 	}
+	defer func() {
+		if err != nil {
+			cmd.Process.Kill()
+		}
+	}()
 
-	const sockFd = 3 // Cmd.ExtraFiles[] fds are numbered starting from 3
-	cmd := exec.Command(config.VirtioFSDaemon, virtiofsdArgs(id, config, sockFd)...)
-	cmd.ExtraFiles = append(cmd.ExtraFiles, fd)
+	// Wait for socket to become available
+	sockReady := make(chan error, 1)
+	timeStart := time.Now()
+	go func() {
+		scanner := bufio.NewScanner(cmdOutput)
+		var sent bool
+		virtLog.Debug("Reading virtiofsd output:")
+		for scanner.Scan() {
 
-	err = cmd.Start()
-	return cmd.Process.Pid, err
+			output := scanner.Text()
+			virtLog.Debugf("DEBUG!!!!!! %s", output)
+			if !sent && strings.Contains(output, "Waiting for vhost-user socket connection...") {
+				sockReady <- nil
+				sent = true
+
+			}
+
+		}
+		if !sent {
+			if err := scanner.Err(); err != nil {
+				sockReady <- err
+
+			} else {
+				sockReady <- fmt.Errorf("virtiofsd did not announce socket connection")
+			}
+
+		}
+		// Wait to release resources of virtiofsd process
+		cmd.Process.Wait()
+
+	}()
+
+	return waitVirtiofsd(timeStart, 10, sockReady,
+		fmt.Sprintf("virtiofsd (pid=%d) socket %s", cmd.Process.Pid, sockPath))
 }
 
-func virtiofsdArgs(id string, config HypervisorConfig, fd uintptr) []string {
+func waitVirtiofsd(start time.Time, timeout int, ready chan error, errMsg string) (int, error) {
+	var err error
+
+	timeoutDuration := time.Duration(timeout) * time.Second
+	select {
+	case err = <-ready:
+	case <-time.After(timeoutDuration):
+		err = fmt.Errorf("timed out waiting for %s", errMsg)
+
+	}
+	if err != nil {
+		return 0, err
+
+	}
+
+	// Now reduce timeout by the elapsed time
+	elapsed := time.Since(start)
+	if elapsed < timeoutDuration {
+		timeout = timeout - int(elapsed.Seconds())
+
+	} else {
+		timeout = 0
+
+	}
+	return timeout, nil
+
+}
+
+func virtiofsdArgs(id string, config HypervisorConfig, socketPath string) []string {
 	// The daemon will terminate when the vhost-user socket
 	// connection with QEMU closes.  Therefore we do not keep track
 	// of this child process after returning from this function.
 	sourcePath := filepath.Join(kataHostSharedDir(), id)
 	args := []string{
-		fmt.Sprintf("--fd=%v", fd),
+		fmt.Sprintf("--socket-path=%s", socketPath),
 		"-o", "source=" + sourcePath,
 		"-o", "cache=" + config.VirtioFSCache,
-		"--syslog", "-o", "no_posix_lock"}
+		"-o", "no_posix_lock"}
 	if config.Debug {
 		args = append(args, "-d")
 	} else {
