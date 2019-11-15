@@ -134,16 +134,14 @@ func (c *cloudHypervisor) addDevice(devInfo interface{}, devType deviceType) err
 		//TODO: fix API to use int64
 		c.vmconfig.Vsock = []chclient.VsockConfig{{Cid: int32(defaultGuestVSockCID), Sock: v.UdsPath}}
 	case Endpoint:
-		switch ep := v.(type) {
-		case *VethEndpoint, *BridgedMacvlanEndpoint, *IPVlanEndpoint:
-			netPair := ep.NetworkPair()
-			devLogger.Debugf("Adding Endpoint to hypervisor: %s", netPair.NetInterworkingModel)
-		case *MacvtapEndpoint:
-			netPair := ep.NetworkPair()
-			devLogger.Debugf("Adding Endpoint to hypervisor: %s", netPair.NetInterworkingModel)
-		default:
-			return fmt.Errorf("Unknown type for endpoint")
-		}
+		n := chclient.NetConfig{}
+		n.Mac = v.HardwareAddr()
+		n.Tap = v.NetworkPair().TapInterface.TAPIface.Name
+
+		//TODO server does not allow empty IP fail serde to get it
+		n.Ip = "0.0.0.0"
+		n.Mask = "0.0.0.0"
+		c.vmconfig.Net = append(c.vmconfig.Net, n)
 
 		return nil
 	default:
@@ -391,13 +389,13 @@ func (c *cloudHypervisor) bootVM(timeout int) error {
 	_, err = cl.CreateVM(ctx, c.vmconfig)
 
 	if err != nil {
-		return err
+		return openApiClientError(err)
 	}
 
 	info, _, err := cl.VmInfoGet(ctx)
 
 	if err != nil {
-		return err
+		return openApiClientError(err)
 	}
 
 	c.Logger().Debugf("VM state after create: %#v", info)
