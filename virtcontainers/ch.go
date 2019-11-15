@@ -118,9 +118,8 @@ func (c *cloudHypervisor) addDevice(devInfo interface{}, devType deviceType) err
 		}
 		c.vmconfig.Fs = []chclient.FsConfig{
 			{
-				Tag: v.MountTag,
-				// TODO Fix in API to use uint32
-				CacheSize: int32(c.config.VirtioFSCacheSize),
+				Tag:       v.MountTag,
+				CacheSize: int64(c.config.VirtioFSCacheSize << 20),
 				Sock:      fsSocket,
 				//TODO
 				NumQueues: 1,
