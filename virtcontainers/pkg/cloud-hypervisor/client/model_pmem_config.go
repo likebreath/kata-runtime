@@ -11,6 +11,6 @@ package openapi
 // PmemConfig struct for PmemConfig
 type PmemConfig struct {
 	File string `json:"file"`
-	Size int32 `json:"size"`
+	Size int64 `json:"size"`
 	Iommu bool `json:"iommu,omitempty"`
 }

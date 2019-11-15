@@ -10,6 +10,6 @@
 package openapi
 // MemoryConfig struct for MemoryConfig
 type MemoryConfig struct {
-	Size int32 `json:"size"`
+	Size int64 `json:"size"`
 	File string `json:"file,omitempty"`
 }

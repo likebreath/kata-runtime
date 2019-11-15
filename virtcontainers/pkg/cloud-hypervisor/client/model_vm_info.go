@@ -10,6 +10,6 @@
 package openapi
 // VmInfo Virtual Machine information
 type VmInfo struct {
-	Version string `json:"version,omitempty"`
+	Config VmConfig `json:"config"`
 	State string `json:"state"`
 }
