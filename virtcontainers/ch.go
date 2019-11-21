@@ -24,7 +24,8 @@ import (
 )
 
 const (
-	apiSocket = "api.sock"
+	apiSocket             = "api.sock"
+	clhStopSandboxTimeout = 15
 )
 
 type cloudHypervisorState struct {
@@ -283,31 +284,51 @@ func (c *cloudHypervisor) Start(timeout int) error {
 	return nil
 }
 
-func (c *cloudHypervisor) waitAPIServer(timeout int) error {
-	// TODO: Add tracing
-
-	ctx := context.Background()
+func (c *cloudHypervisor) isClhRunning(timeout int) (bool, error) {
+	// todo: add tracing/logging
 	if timeout < 0 {
-		return fmt.Errorf("Invalid timeout %ds", timeout)
+		return false, fmt.Errorf("Invalid timeout %ds", timeout)
 	}
 
+	pid := c.state.pid
+
+	// Check if clh process is running, in case it is not, let's
+	// return from here.
+	if err := syscall.Kill(pid, syscall.Signal(0)); err != nil {
+		return false, nil
+	}
+
+	ctx := context.Background()
 	timeStart := time.Now()
 	cl := c.client()
 	for {
-
-		info, res, err := cl.VmmInfoGet(ctx)
+		_, _, err := cl.VmmPingGet(ctx)
 		if err == nil {
-			c.Logger().Debug("TODO Vmm version ", info.Version)
-			fmt.Println("check reponse", info, res)
-			return nil
+			return true, nil
 		}
 
 		if int(time.Since(timeStart).Seconds()) > timeout {
-			return fmt.Errorf("Failed to connect to API (timeout %ds): %s", timeout, openApiClientError(err))
+			return false, fmt.Errorf("Failed to connect to API (timeout %ds): %s", timeout, openApiClientError(err))
 		}
 
 		time.Sleep(time.Duration(10) * time.Millisecond)
 	}
+
+}
+
+func (c *cloudHypervisor) waitAPIServer(timeout int) error {
+	// TODO: Add tracing
+	clh_running, err := c.isClhRunning(timeout)
+
+	if err != nil {
+		return err
+	}
+
+	if !clh_running {
+		return fmt.Errorf("CLH is not running")
+	}
+
+	return nil
 }
 
 func openApiClientError(err error) error {
