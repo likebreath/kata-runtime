@@ -84,8 +84,45 @@ func (c *cloudHypervisor) startSandbox(timeout int) error {
 
 	return nil
 }
+
 func (c *cloudHypervisor) stopSandbox() error {
-	return nil
+	clh_running, err := c.isClhRunning(clhStopSandboxTimeout)
+
+	if err != nil {
+		return err
+	}
+
+	if !clh_running {
+		return nil
+	}
+
+	pid := c.state.pid
+	//	ctx := context.Background()
+	//	cl := c.client()
+
+	// Send a SIGTERM to the VM process to try to stop it properly
+	if err = syscall.Kill(pid, syscall.SIGTERM); err != nil {
+		return err
+	}
+
+	// Wait for the VM process to terminate
+	tInit := time.Now()
+	for {
+		if err = syscall.Kill(pid, syscall.Signal(0)); err != nil {
+			return nil
+		}
+
+		if time.Since(tInit).Seconds() >= clhStopSandboxTimeout {
+			break
+		}
+
+		// Let's avoid to run a too busy loop
+		time.Sleep(time.Duration(50) * time.Millisecond)
+	}
+
+	// Let's try with a hammer now, a SIGKILL should get rid of the
+	// VM process.
+	return syscall.Kill(pid, syscall.SIGKILL)
 }
 
 func (c *cloudHypervisor) pauseSandbox() error {
