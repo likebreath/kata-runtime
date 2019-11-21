@@ -5,7 +5,7 @@
 
 all: clean-generated-code
 	# TODO curl
-	cp ~/cloud-hypervisor/vmm/src/api/openapi/cloud-hypervisor.yaml .
+	cp /home/chenb/project/cloud-hypervisor/cloud-hypervisor/vmm/src/api/openapi/cloud-hypervisor.yaml .
 	java -jar openapi-generator-cli.jar generate -i cloud-hypervisor.yaml -g go -o ./client
 
 clean-generated-code:

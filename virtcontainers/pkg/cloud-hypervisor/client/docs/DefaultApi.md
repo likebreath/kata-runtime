@@ -13,13 +13,14 @@ Method | HTTP request | Description
 [**ShutdownVM**](DefaultApi.md#ShutdownVM) | **Put** /vm.shutdown | Shut the VM instance down.
 [**ShutdownVMM**](DefaultApi.md#ShutdownVMM) | **Put** /vmm.shutdown | Shuts the cloud-hypervisor VMM.
 [**VmInfoGet**](DefaultApi.md#VmInfoGet) | **Get** /vm.info | Returns general information about the cloud-hypervisor Virtual Machine (VM) instance.
-[**VmmInfoGet**](DefaultApi.md#VmmInfoGet) | **Get** /vmm.info | Returns general information about the cloud-hypervisor Virtual Machine Monitor (VMM).
+[**VmmPingGet**](DefaultApi.md#VmmPingGet) | **Get** /vmm.ping | Requests a response to check if the VMM API server is available
 
 
 
 ## BootVM
 
 > BootVM(ctx, )
+
 Boot the previously created VM instance.
 
 ### Required Parameters
@@ -47,6 +48,7 @@ No authorization required
 ## CreateVM
 
 > CreateVM(ctx, vmConfig)
+
 Create the cloud-hypervisor Virtual Machine (VM) instance. The instance is not booted, only created.
 
 ### Required Parameters
@@ -78,6 +80,7 @@ No authorization required
 ## DeleteVM
 
 > DeleteVM(ctx, )
+
 Delete the cloud-hypervisor Virtual Machine (VM) instance.
 
 ### Required Parameters
@@ -105,6 +108,7 @@ No authorization required
 ## PauseVM
 
 > PauseVM(ctx, )
+
 Pause a previously booted VM instance.
 
 ### Required Parameters
@@ -132,6 +136,7 @@ No authorization required
 ## RebootVM
 
 > RebootVM(ctx, )
+
 Reboot the VM instance.
 
 ### Required Parameters
@@ -159,6 +164,7 @@ No authorization required
 ## ResumeVM
 
 > ResumeVM(ctx, )
+
 Resume a previously paused VM instance.
 
 ### Required Parameters
@@ -186,6 +192,7 @@ No authorization required
 ## ShutdownVM
 
 > ShutdownVM(ctx, )
+
 Shut the VM instance down.
 
 ### Required Parameters
@@ -213,6 +220,7 @@ No authorization required
 ## ShutdownVMM
 
 > ShutdownVMM(ctx, )
+
 Shuts the cloud-hypervisor VMM.
 
 ### Required Parameters
@@ -240,6 +248,7 @@ No authorization required
 ## VmInfoGet
 
 > VmInfo VmInfoGet(ctx, )
+
 Returns general information about the cloud-hypervisor Virtual Machine (VM) instance.
 
 ### Required Parameters
@@ -264,10 +273,11 @@ No authorization required
 [[Back to README]](../README.md)
 
 
-## VmmInfoGet
+## VmmPingGet
 
-> VmmInfo VmmInfoGet(ctx, )
-Returns general information about the cloud-hypervisor Virtual Machine Monitor (VMM).
+> VmmPingResponse VmmPingGet(ctx, )
+
+Requests a response to check if the VMM API server is available
 
 ### Required Parameters
 
@@ -275,7 +285,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-[**VmmInfo**](VmmInfo.md)
+[**VmmPingResponse**](VmmPingResponse.md)
 
 ### Authorization
 

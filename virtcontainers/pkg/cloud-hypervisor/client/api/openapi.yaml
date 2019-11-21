@@ -10,17 +10,16 @@ info:
 servers:
 - url: http://localhost/api/v1
 paths:
-  /vmm.info:
+  /vmm.ping:
     get:
       responses:
         200:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/VmmInfo'
+                $ref: '#/components/schemas/VmmPingResponse'
           description: The VMM information
-      summary: Returns general information about the cloud-hypervisor Virtual Machine
-        Monitor (VMM).
+      summary: Requests a response to check if the VMM API server is available
   /vmm.shutdown:
     put:
       operationId: shutdownVMM
@@ -116,7 +115,7 @@ paths:
       summary: Reboot the VM instance.
 components:
   schemas:
-    VmmInfo:
+    VmmPingResponse:
       description: Virtual Machine Monitor information
       example:
         version: version

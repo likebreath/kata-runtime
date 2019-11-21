@@ -607,7 +607,6 @@ func (a *DefaultApiService) VmInfoGet(ctx _context.Context) (VmInfo, *_nethttp.R
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr.model = v
-			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
@@ -625,22 +624,22 @@ func (a *DefaultApiService) VmInfoGet(ctx _context.Context) (VmInfo, *_nethttp.R
 }
 
 /*
-VmmInfoGet Returns general information about the cloud-hypervisor Virtual Machine Monitor (VMM).
+VmmPingGet Requests a response to check if the VMM API server is available
  * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-@return VmmInfo
+@return VmmPingResponse
 */
-func (a *DefaultApiService) VmmInfoGet(ctx _context.Context) (VmmInfo, *_nethttp.Response, error) {
+func (a *DefaultApiService) VmmPingGet(ctx _context.Context) (VmmPingResponse, *_nethttp.Response, error) {
 	var (
 		localVarHTTPMethod   = _nethttp.MethodGet
 		localVarPostBody     interface{}
 		localVarFormFileName string
 		localVarFileName     string
 		localVarFileBytes    []byte
-		localVarReturnValue  VmmInfo
+		localVarReturnValue  VmmPingResponse
 	)
 
 	// create path and map variables
-	localVarPath := a.client.cfg.BasePath + "/vmm.info"
+	localVarPath := a.client.cfg.BasePath + "/vmm.ping"
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := _neturl.Values{}
@@ -685,14 +684,13 @@ func (a *DefaultApiService) VmmInfoGet(ctx _context.Context) (VmmInfo, *_nethttp
 			error: localVarHTTPResponse.Status,
 		}
 		if localVarHTTPResponse.StatusCode == 200 {
-			var v VmmInfo
+			var v VmmPingResponse
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr.model = v
-			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
