@@ -14,7 +14,7 @@ paths:
 
   /vmm.ping:
     get:
-      summary: Requests a response to check if the VMM API server is available
+      summary: Ping the VMM to check for API server availability
       responses:
         200:
           description: The VMM information
@@ -226,6 +226,9 @@ components:
           default: 512 MB
         file:
           type: string
+        mergeable:
+          type: boolean
+          default: false
 
     KernelConfig:
       required:
@@ -319,6 +322,9 @@ components:
         iommu:
           type: boolean
           default: false
+        mergeable:
+          type: boolean
+          default: false
 
     ConsoleConfig:
       required:
@@ -389,6 +395,7 @@ components:
       properties:
         cid:
           type: integer
+          format: int64
           minimum: 3
           description: Guest Vsock CID
         sock:
