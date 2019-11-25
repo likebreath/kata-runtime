@@ -1,6 +1,7 @@
 *.o
 *.patch
 *.swp
+*.jar
 .git-commit
 .git-commit.tmp
 /cli/config/configuration-acrn.toml
