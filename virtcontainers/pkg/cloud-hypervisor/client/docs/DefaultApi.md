@@ -13,7 +13,7 @@ Method | HTTP request | Description
 [**ShutdownVM**](DefaultApi.md#ShutdownVM) | **Put** /vm.shutdown | Shut the VM instance down.
 [**ShutdownVMM**](DefaultApi.md#ShutdownVMM) | **Put** /vmm.shutdown | Shuts the cloud-hypervisor VMM.
 [**VmInfoGet**](DefaultApi.md#VmInfoGet) | **Get** /vm.info | Returns general information about the cloud-hypervisor Virtual Machine (VM) instance.
-[**VmmPingGet**](DefaultApi.md#VmmPingGet) | **Get** /vmm.ping | Requests a response to check if the VMM API server is available
+[**VmmPingGet**](DefaultApi.md#VmmPingGet) | **Get** /vmm.ping | Ping the VMM to check for API server availability
 
 
 
@@ -267,7 +267,7 @@ No authorization required
 ## VmmPingGet
 
 > VmmPingResponse VmmPingGet(ctx, )
-Requests a response to check if the VMM API server is available
+Ping the VMM to check for API server availability
 
 ### Required Parameters
 

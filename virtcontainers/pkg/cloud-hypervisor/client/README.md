@@ -41,7 +41,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**ShutdownVM**](docs/DefaultApi.md#shutdownvm) | **Put** /vm.shutdown | Shut the VM instance down.
 *DefaultApi* | [**ShutdownVMM**](docs/DefaultApi.md#shutdownvmm) | **Put** /vmm.shutdown | Shuts the cloud-hypervisor VMM.
 *DefaultApi* | [**VmInfoGet**](docs/DefaultApi.md#vminfoget) | **Get** /vm.info | Returns general information about the cloud-hypervisor Virtual Machine (VM) instance.
-*DefaultApi* | [**VmmPingGet**](docs/DefaultApi.md#vmmpingget) | **Get** /vmm.ping | Requests a response to check if the VMM API server is available
+*DefaultApi* | [**VmmPingGet**](docs/DefaultApi.md#vmmpingget) | **Get** /vmm.ping | Ping the VMM to check for API server availability
 
 
 ## Documentation For Models

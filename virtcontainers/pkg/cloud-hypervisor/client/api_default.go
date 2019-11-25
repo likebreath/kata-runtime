@@ -625,7 +625,7 @@ func (a *DefaultApiService) VmInfoGet(ctx _context.Context) (VmInfo, *_nethttp.R
 }
 
 /*
-VmmPingGet Requests a response to check if the VMM API server is available
+VmmPingGet Ping the VMM to check for API server availability
  * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 @return VmmPingResponse
 */

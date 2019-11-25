@@ -19,7 +19,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/VmmPingResponse'
           description: The VMM information
-      summary: Requests a response to check if the VMM API server is available
+      summary: Ping the VMM to check for API server availability
   /vmm.shutdown:
     put:
       operationId: shutdownVMM
@@ -135,6 +135,7 @@ components:
             file: file
             iommu: false
           memory:
+            mergeable: false
             file: file
             size: 6
           disks:
@@ -195,10 +196,12 @@ components:
             iommu: false
             cid: 3
           pmem:
-          - file: file
+          - mergeable: false
+            file: file
             size: 2
             iommu: false
-          - file: file
+          - mergeable: false
+            file: file
             size: 2
             iommu: false
           cmdline:
@@ -240,6 +243,7 @@ components:
           file: file
           iommu: false
         memory:
+          mergeable: false
           file: file
           size: 6
         disks:
@@ -300,10 +304,12 @@ components:
           iommu: false
           cid: 3
         pmem:
-        - file: file
+        - mergeable: false
+          file: file
           size: 2
           iommu: false
-        - file: file
+        - mergeable: false
+          file: file
           size: 2
           iommu: false
         cmdline:
@@ -391,6 +397,7 @@ components:
       type: object
     MemoryConfig:
       example:
+        mergeable: false
         file: file
         size: 6
       properties:
@@ -399,6 +406,9 @@ components:
           type: integer
         file:
           type: string
+        mergeable:
+          default: false
+          type: boolean
       required:
       - size
       type: object
@@ -498,6 +508,7 @@ components:
       type: object
     PmemConfig:
       example:
+        mergeable: false
         file: file
         size: 2
         iommu: false
@@ -508,6 +519,9 @@ components:
           format: int64
           type: integer
         iommu:
+          default: false
+          type: boolean
+        mergeable:
           default: false
           type: boolean
       required:
@@ -605,6 +619,7 @@ components:
       properties:
         cid:
           description: Guest Vsock CID
+          format: int64
           minimum: 3
           type: integer
         sock:
