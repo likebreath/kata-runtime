@@ -171,11 +171,13 @@ components:
             num_queues: 1
             queue_size: 5
             cache_size: 5
+            dax: true
             tag: tag
           - sock: sock
             num_queues: 1
             queue_size: 5
             cache_size: 5
+            dax: true
             tag: tag
           vhost_user_net:
           - vu_cfg:
@@ -279,11 +281,13 @@ components:
           num_queues: 1
           queue_size: 5
           cache_size: 5
+          dax: true
           tag: tag
         - sock: sock
           num_queues: 1
           queue_size: 5
           cache_size: 5
+          dax: true
           tag: tag
         vhost_user_net:
         - vu_cfg:
@@ -487,8 +491,11 @@ components:
         num_queues: 1
         queue_size: 5
         cache_size: 5
+        dax: true
         tag: tag
       properties:
+        dax:
+          type: boolean
         tag:
           type: string
         sock:

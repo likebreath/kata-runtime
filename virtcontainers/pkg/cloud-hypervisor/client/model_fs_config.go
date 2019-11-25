@@ -10,6 +10,7 @@
 package openapi
 // FsConfig struct for FsConfig
 type FsConfig struct {
+	Dax bool `json:"dax,omitempty"`
 	Tag string `json:"tag"`
 	Sock string `json:"sock"`
 	NumQueues int32 `json:"num_queues"`

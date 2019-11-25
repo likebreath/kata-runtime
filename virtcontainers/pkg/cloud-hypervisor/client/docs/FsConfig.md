@@ -4,6 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**Dax** | **bool** |  | [optional] 
 **Tag** | **string** |  | 
 **Sock** | **string** |  | 
 **NumQueues** | **int32** |  | 
