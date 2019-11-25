@@ -398,8 +398,7 @@ func (clh *cloudHypervisor) addDevice(devInfo interface{}, devType deviceType) e
 			"cid":  v.ContextID,
 			"port": v.Port,
 		}).Info("Adding HybridVSock")
-		//TODO: fix API to use int64
-		clh.vmconfig.Vsock = []chclient.VsockConfig{{Cid: int32(defaultGuestVSockCID), Sock: v.UdsPath}}
+		clh.vmconfig.Vsock = []chclient.VsockConfig{{Cid: defaultGuestVSockCID, Sock: v.UdsPath}}
 	case types.Volume:
 
 		if clh.config.SharedFS != config.VirtioFS {
