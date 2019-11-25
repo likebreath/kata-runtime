@@ -46,6 +46,7 @@ const (
 
 const (
 	clhTimeout            = 10
+	clhApiTimeout         = 1
 	clhSocket             = "clh.sock"
 	clhAPISocket          = "clh-api.sock"
 	clhLogFile            = "clh.log"
@@ -1090,10 +1091,10 @@ func (c *cloudHypervisor) isClhRunning(timeout int) (bool, error) {
 		return false, nil
 	}
 
-	ctx := context.Background()
 	timeStart := time.Now()
 	cl := c.client()
 	for {
+		ctx, _ := context.WithTimeout(context.Background(), clhApiTimeout*time.Second)
 		_, _, err := cl.VmmPingGet(ctx)
 		if err == nil {
 			return true, nil
@@ -1157,7 +1158,7 @@ func (c *cloudHypervisor) bootVM(timeout int) error {
 		return fmt.Errorf("Invalid timeout %ds", timeout)
 	}
 
-	ctx := context.Background()
+	ctx, _ := context.WithTimeout(context.Background(), clhApiTimeout*time.Second)
 
 	cl := c.client()
 
