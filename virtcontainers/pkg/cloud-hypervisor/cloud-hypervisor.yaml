@@ -296,6 +296,8 @@ components:
       - queue_size
       type: object
       properties:
+        dax:
+          type: boolean
         tag:
           type: string
         sock:
