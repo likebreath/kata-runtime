@@ -47,6 +47,7 @@ const (
 const (
 	clhTimeout            = 10
 	clhApiTimeout         = 1
+	clhStopSandboxTimeout = 3
 	clhSocket             = "clh.sock"
 	clhAPISocket          = "clh-api.sock"
 	clhLogFile            = "clh.log"
@@ -498,11 +499,18 @@ func (clh *cloudHypervisor) terminate() (err error) {
 	}
 	clh.Logger().WithField("PID", pid).Info("Stopping Cloud Hypervisor")
 
-	// Send a SIGTERM to the VM process to try to stop it properly
-	if err = syscall.Kill(pid, syscall.SIGTERM); err != nil {
-		if err == syscall.ESRCH {
-			return nil
-		}
+	clh_running, err := clh.isClhRunning(clhStopSandboxTimeout)
+
+	if err != nil {
+		return err
+	}
+
+	if !clh_running {
+		return nil
+	}
+
+	ctx, _ := context.WithTimeout(context.Background(), clhStopSandboxTimeout*time.Second)
+	if _, err = clh.client().ShutdownVMM(ctx); err != nil {
 		return err
 	}
 
@@ -513,8 +521,8 @@ func (clh *cloudHypervisor) terminate() (err error) {
 			return nil
 		}
 
-		if time.Since(tInit).Seconds() >= fcStopSandboxTimeout {
-			clh.Logger().Warnf("VM still running after waiting %ds", fcStopSandboxTimeout)
+		if time.Since(tInit).Seconds() >= clhStopSandboxTimeout {
+			clh.Logger().Warnf("VM still running after waiting %ds", clhStopSandboxTimeout)
 			break
 		}
 
