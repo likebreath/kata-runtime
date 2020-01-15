@@ -64,6 +64,7 @@ const (
 	defaultClhPath        = "/usr/local/bin/cloud-hypervisor"
 	virtioFsCacheAlways   = "always"
 	maxClhVcpus           = uint32(64)
+	dbgCILogCLH           = "/tmp/dbg-ci-clh-std.log"
 )
 
 // Interface that hides the implementation of openAPI client
@@ -744,12 +745,26 @@ func (clh *cloudHypervisor) LaunchClh() (string, int, error) {
 		args = append(args, logfile)
 	}
 
+	args = append(args, "-vvv")
+
 	clh.Logger().WithField("path", clhPath).Info()
 	clh.Logger().WithField("args", strings.Join(args, " ")).Info()
 
 	cmd := exec.Command(clhPath, args...)
-	cmd.Stdout = &clh.cmdOutput
-	cmd.Stderr = &clh.cmdOutput
+
+	clhFile, err := os.OpenFile(dbgCILogCLH, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		clh.Logger().WithField("error", err).Warn("[DBG CI] can't open file: ", clhPath)
+
+		cmd.Stdout = &clh.cmdOutput
+		cmd.Stderr = &clh.cmdOutput
+	} else {
+		clhFile.WriteString("---------------------\n")
+		clhFile.WriteString("LaunchClh()\n")
+		clhFile.WriteString("---------------------\n")
+		cmd.Stdout = clhFile
+		cmd.Stderr = clhFile
+	}
 
 	if clh.config.Debug {
 		cmd.Env = os.Environ()
