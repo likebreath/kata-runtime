@@ -122,6 +122,7 @@ var clhKernelParams = []Param{
 	{"no_timer_check", ""}, // do not check broken timer IRQ resources
 	{"noreplace-smp", ""},  // do not replace SMP instructions
 	{"agent.log_vport", fmt.Sprintf("%d", vSockLogsPort)}, // tell the agent where to send the logs
+	{"console", "hvc0"}, // Get guest console output through virtio hvc
 }
 
 var clhDebugKernelParams = []Param{
@@ -746,6 +747,10 @@ func (clh *cloudHypervisor) LaunchClh() (string, int, error) {
 	}
 
 	args = append(args, "-vvv")
+	args = append(args, "--serial")
+	args = append(args, "off")
+	args = append(args, "--console")
+	args = append(args, "tty")
 
 	clh.Logger().WithField("path", clhPath).Info()
 	clh.Logger().WithField("args", strings.Join(args, " ")).Info()
