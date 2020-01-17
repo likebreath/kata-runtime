@@ -275,7 +275,7 @@ func (clh *cloudHypervisor) createSandbox(ctx context.Context, id string, networ
 	}
 
 	clh.vmconfig.Console = chclient.ConsoleConfig{
-		Mode: cctOFF,
+		Mode: cctTty,
 	}
 
 	// Overwrite the default value of HTTP API socket path for cloud hypervisor
@@ -749,8 +749,6 @@ func (clh *cloudHypervisor) LaunchClh() (string, int, error) {
 	args = append(args, "-vvv")
 	args = append(args, "--serial")
 	args = append(args, "off")
-	args = append(args, "--console")
-	args = append(args, "tty")
 
 	clh.Logger().WithField("path", clhPath).Info()
 	clh.Logger().WithField("args", strings.Join(args, " ")).Info()
@@ -801,6 +799,7 @@ func MaxClhVCPUs() uint32 {
 const (
 	cctOFF  string = "Off"
 	cctFILE string = "File"
+	cctTty  string = "Tty"
 )
 
 const (
