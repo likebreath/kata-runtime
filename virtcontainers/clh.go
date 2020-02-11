@@ -64,6 +64,7 @@ const (
 	defaultClhPath        = "/usr/local/bin/cloud-hypervisor"
 	virtioFsCacheAlways   = "always"
 	maxClhVcpus           = uint32(64)
+	dbgCILogCLH           = "/tmp/dbg-ci-clh-std.log"
 )
 
 // Interface that hides the implementation of openAPI client
@@ -120,6 +121,7 @@ var clhKernelParams = []Param{
 	{"no_timer_check", ""}, // do not check broken timer IRQ resources
 	{"noreplace-smp", ""},  // do not replace SMP instructions
 	{"agent.log_vport", fmt.Sprintf("%d", vSockLogsPort)}, // tell the agent where to send the logs
+	{"console", "hvc0"}, // Get guest console output through virtio hvc
 }
 
 var clhDebugKernelParams = []Param{
@@ -270,7 +272,7 @@ func (clh *cloudHypervisor) createSandbox(ctx context.Context, id string, networ
 	}
 
 	clh.vmconfig.Console = chclient.ConsoleConfig{
-		Mode: cctOFF,
+		Mode: cctTty,
 	}
 
 	// Overwrite the default value of HTTP API socket path for cloud hypervisor
@@ -728,8 +730,20 @@ func (clh *cloudHypervisor) LaunchClh() (string, int, error) {
 	clh.Logger().WithField("args", strings.Join(args, " ")).Info()
 
 	cmd := exec.Command(clhPath, args...)
-	cmd.Stdout = &clh.cmdOutput
-	cmd.Stderr = &clh.cmdOutput
+
+	clhFile, err := os.OpenFile(dbgCILogCLH, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		clh.Logger().WithField("error", err).Warn("[DBG CI] can't open file: ", clhPath)
+
+		cmd.Stdout = &clh.cmdOutput
+		cmd.Stderr = &clh.cmdOutput
+	} else {
+		clhFile.WriteString("---------------------\n")
+		clhFile.WriteString("LaunchClh()\n")
+		clhFile.WriteString("---------------------\n")
+		cmd.Stdout = clhFile
+		cmd.Stderr = clhFile
+	}
 
 	if clh.config.Debug {
 		cmd.Env = os.Environ()
@@ -762,6 +776,7 @@ const (
 	cctOFF  string = "Off"
 	cctFILE string = "File"
 	cctNULL string = "Null"
+	cctTty  string = "Tty"
 )
 
 const (
