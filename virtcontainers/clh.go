@@ -88,6 +88,10 @@ type clhClient interface {
 	VmResizePut(ctx context.Context, vmResize chclient.VmResize) (*http.Response, error)
 	// Add VFIO PCI device to the VM
 	VmAddDevicePut(ctx context.Context, vmAddDevice chclient.VmAddDevice) (*http.Response, error)
+	// Add a new disk device to the VM
+	VmAddDiskPut(ctx context.Context, diskConfig chclient.DiskConfig) (*http.Response, error)
+	// Add a new pmem device to the VM
+	VmAddPmemPut(ctx context.Context, pmemConfig chclient.PmemConfig) (*http.Response, error)
 }
 
 type CloudHypervisorVersion struct {
@@ -401,6 +405,48 @@ func (clh *cloudHypervisor) getThreadIDs() (vcpuThreadIDs, error) {
 	return vcpuInfo, nil
 }
 
+func (clh *cloudHypervisor) hotplugBlockDevice(drive *config.BlockDrive) error {
+	cl := clh.client()
+	ctx, cancel := context.WithTimeout(context.Background(), clhHotPlugAPITimeout*time.Second)
+	defer cancel()
+
+	_, _, err := cl.VmmPingGet(ctx)
+	if err != nil {
+		return openAPIClientError(err)
+	}
+
+	if drive.Pmem {
+		//		pmemDevice := chclient.PmemConfig{
+		//		    File: drive.File
+		//		    Size:
+		//		    Iommu: false
+		//		    Mergeable:
+		//		    DiscardWrites:
+		//		}
+		//		_, err = cl.VmAddPmemPut(ctx, pmemDevice)
+		err = fmt.Errorf("Pmem device hotplug not supported\n")
+	} else {
+		blkDevice := chclient.DiskConfig{
+			Path:     drive.File,
+			Readonly: drive.ReadOnly,
+			//		Direct:
+			//		Iommu: false
+			//		NumQueues:
+			//		QueueSize:
+			//		VhostUser:
+			//		VhostSocket:
+			//		Wce:
+			//		PoolQueue:
+		}
+		_, err = cl.VmAddDiskPut(ctx, blkDevice)
+	}
+
+	if err != nil {
+		err = fmt.Errorf("Failed to hotplug block device %+v %s", drive, openAPIClientError(err))
+	}
+	return err
+}
+
 func (clh *cloudHypervisor) hotPlugVFIODevice(device config.VFIODev) error {
 	cl := clh.client()
 	ctx, cancel := context.WithTimeout(context.Background(), clhHotPlugAPITimeout*time.Second)
@@ -423,6 +469,9 @@ func (clh *cloudHypervisor) hotplugAddDevice(devInfo interface{}, devType device
 	defer span.Finish()
 
 	switch devType {
+	case blockDev:
+		drive := devInfo.(*config.BlockDrive)
+		return nil, clh.hotplugBlockDevice(drive)
 	case vfioDev:
 		device := devInfo.(*config.VFIODev)
 		return nil, clh.hotPlugVFIODevice(*device)
