@@ -7,6 +7,7 @@ Name | Type | Description | Notes
 **Cpus** | [**CpusConfig**](CpusConfig.md) |  | [optional] 
 **Memory** | [**MemoryConfig**](MemoryConfig.md) |  | [optional] 
 **Kernel** | [**KernelConfig**](KernelConfig.md) |  | 
+**Initramfs** | [**InitramfsConfig**](InitramfsConfig.md) |  | [optional] 
 **Cmdline** | [**CmdLineConfig**](CmdLineConfig.md) |  | 
 **Disks** | [**[]DiskConfig**](DiskConfig.md) |  | [optional] 
 **Net** | [**[]NetConfig**](NetConfig.md) |  | [optional] 
