@@ -123,6 +123,18 @@ paths:
         "405":
           description: The VM instance could not reboot because it is not booted.
       summary: Reboot the VM instance.
+  /vm.power-button:
+    put:
+      operationId: power-buttonVM
+      responses:
+        "204":
+          description: Power button successfully triggered in the VM
+        "404":
+          description: The button could not be triggered because it is not created
+            yet
+        "405":
+          description: The button could not be triggered because it is not booted.
+      summary: Trigger a power button in the VM
   /vm.resize:
     put:
       requestBody:
@@ -332,7 +344,7 @@ components:
     VmInfo:
       description: Virtual Machine information
       example:
-        memory_actual_size: 2
+        memory_actual_size: 5
         state: Created
         config:
           console:
@@ -340,50 +352,53 @@ components:
             file: file
             iommu: false
           balloon:
-            size: 4
+            size: 9
           memory:
             hugepages: false
             shared: false
+            hugepage_size: 4
             mergeable: false
             size: 9
             hotplugged_size: 2
             zones:
             - hugepages: false
               shared: false
+              hugepage_size: 1
               mergeable: false
               file: file
-              size: 4
-              hotplugged_size: 1
-              host_numa_node: 7
+              size: 7
+              hotplugged_size: 6
+              host_numa_node: 1
               id: id
               hotplug_size: 1
             - hugepages: false
               shared: false
+              hugepage_size: 1
               mergeable: false
               file: file
-              size: 4
-              hotplugged_size: 1
-              host_numa_node: 7
+              size: 7
+              hotplugged_size: 6
+              host_numa_node: 1
               id: id
               hotplug_size: 1
             hotplug_size: 3
             hotplug_method: acpi
           disks:
           - path: path
-            num_queues: 1
+            num_queues: 7
             readonly: false
             iommu: false
-            queue_size: 6
+            queue_size: 1
             vhost_socket: vhost_socket
             vhost_user: false
             direct: false
             poll_queue: true
             id: id
           - path: path
-            num_queues: 1
+            num_queues: 7
             readonly: false
             iommu: false
-            queue_size: 6
+            queue_size: 1
             vhost_socket: vhost_socket
             vhost_user: false
             direct: false
@@ -409,47 +424,47 @@ components:
             path: path
           numa:
           - distances:
-            - distance: 1
+            - distance: 6
               destination: 6
-            - distance: 1
+            - distance: 6
               destination: 6
             cpus:
-            - 3
-            - 3
+            - 2
+            - 2
             memory_zones:
             - memory_zones
             - memory_zones
-            guest_numa_id: 6
+            guest_numa_id: 1
           - distances:
-            - distance: 1
+            - distance: 6
               destination: 6
-            - distance: 1
+            - distance: 6
               destination: 6
             cpus:
-            - 3
-            - 3
+            - 2
+            - 2
             memory_zones:
             - memory_zones
             - memory_zones
-            guest_numa_id: 6
+            guest_numa_id: 1
           rng:
             iommu: false
             src: /dev/urandom
           sgx_epc:
           - prefault: false
-            size: 9
+            size: 6
           - prefault: false
-            size: 9
+            size: 6
           fs:
-          - num_queues: 5
-            queue_size: 9
+          - num_queues: 6
+            queue_size: 8
             cache_size: 9
             dax: true
             tag: tag
             socket: socket
             id: id
-          - num_queues: 5
-            queue_size: 9
+          - num_queues: 6
+            queue_size: 8
             cache_size: 9
             dax: true
             tag: tag
@@ -485,24 +500,30 @@ components:
             path: path
           net:
           - tap: tap
-            num_queues: 7
+            num_queues: 4
             iommu: false
-            queue_size: 1
+            queue_size: 5
             vhost_socket: vhost_socket
             vhost_user: false
             ip: 192.168.249.1
             id: id
             mac: mac
+            fd:
+            - 9
+            - 9
             mask: 255.255.255.0
           - tap: tap
-            num_queues: 7
+            num_queues: 4
             iommu: false
-            queue_size: 1
+            queue_size: 5
             vhost_socket: vhost_socket
             vhost_user: false
             ip: 192.168.249.1
             id: id
             mac: mac
+            fd:
+            - 9
+            - 9
             mask: 255.255.255.0
         device_tree:
           key:
@@ -589,50 +610,53 @@ components:
           file: file
           iommu: false
         balloon:
-          size: 4
+          size: 9
         memory:
           hugepages: false
           shared: false
+          hugepage_size: 4
           mergeable: false
           size: 9
           hotplugged_size: 2
           zones:
           - hugepages: false
             shared: false
+            hugepage_size: 1
             mergeable: false
             file: file
-            size: 4
-            hotplugged_size: 1
-            host_numa_node: 7
+            size: 7
+            hotplugged_size: 6
+            host_numa_node: 1
             id: id
             hotplug_size: 1
           - hugepages: false
             shared: false
+            hugepage_size: 1
             mergeable: false
             file: file
-            size: 4
-            hotplugged_size: 1
-            host_numa_node: 7
+            size: 7
+            hotplugged_size: 6
+            host_numa_node: 1
             id: id
             hotplug_size: 1
           hotplug_size: 3
           hotplug_method: acpi
         disks:
         - path: path
-          num_queues: 1
+          num_queues: 7
           readonly: false
           iommu: false
-          queue_size: 6
+          queue_size: 1
           vhost_socket: vhost_socket
           vhost_user: false
           direct: false
           poll_queue: true
           id: id
         - path: path
-          num_queues: 1
+          num_queues: 7
           readonly: false
           iommu: false
-          queue_size: 6
+          queue_size: 1
           vhost_socket: vhost_socket
           vhost_user: false
           direct: false
@@ -658,47 +682,47 @@ components:
           path: path
         numa:
         - distances:
-          - distance: 1
+          - distance: 6
             destination: 6
-          - distance: 1
+          - distance: 6
             destination: 6
           cpus:
-          - 3
-          - 3
+          - 2
+          - 2
           memory_zones:
           - memory_zones
           - memory_zones
-          guest_numa_id: 6
+          guest_numa_id: 1
         - distances:
-          - distance: 1
+          - distance: 6
             destination: 6
-          - distance: 1
+          - distance: 6
             destination: 6
           cpus:
-          - 3
-          - 3
+          - 2
+          - 2
           memory_zones:
           - memory_zones
           - memory_zones
-          guest_numa_id: 6
+          guest_numa_id: 1
         rng:
           iommu: false
           src: /dev/urandom
         sgx_epc:
         - prefault: false
-          size: 9
+          size: 6
         - prefault: false
-          size: 9
+          size: 6
         fs:
-        - num_queues: 5
-          queue_size: 9
+        - num_queues: 6
+          queue_size: 8
           cache_size: 9
           dax: true
           tag: tag
           socket: socket
           id: id
-        - num_queues: 5
-          queue_size: 9
+        - num_queues: 6
+          queue_size: 8
           cache_size: 9
           dax: true
           tag: tag
@@ -734,24 +758,30 @@ components:
           path: path
         net:
         - tap: tap
-          num_queues: 7
+          num_queues: 4
           iommu: false
-          queue_size: 1
+          queue_size: 5
           vhost_socket: vhost_socket
           vhost_user: false
           ip: 192.168.249.1
           id: id
           mac: mac
+          fd:
+          - 9
+          - 9
           mask: 255.255.255.0
         - tap: tap
-          num_queues: 7
+          num_queues: 4
           iommu: false
-          queue_size: 1
+          queue_size: 5
           vhost_socket: vhost_socket
           vhost_user: false
           ip: 192.168.249.1
           id: id
           mac: mac
+          fd:
+          - 9
+          - 9
           mask: 255.255.255.0
       properties:
         cpus:
@@ -858,11 +888,12 @@ components:
       example:
         hugepages: false
         shared: false
+        hugepage_size: 1
         mergeable: false
         file: file
-        size: 4
-        hotplugged_size: 1
-        host_numa_node: 7
+        size: 7
+        hotplugged_size: 6
+        host_numa_node: 1
         id: id
         hotplug_size: 1
       properties:
@@ -882,6 +913,9 @@ components:
         hugepages:
           default: false
           type: boolean
+        hugepage_size:
+          format: int64
+          type: integer
         host_numa_node:
           format: int32
           type: integer
@@ -899,26 +933,29 @@ components:
       example:
         hugepages: false
         shared: false
+        hugepage_size: 4
         mergeable: false
         size: 9
         hotplugged_size: 2
         zones:
         - hugepages: false
           shared: false
+          hugepage_size: 1
           mergeable: false
           file: file
-          size: 4
-          hotplugged_size: 1
-          host_numa_node: 7
+          size: 7
+          hotplugged_size: 6
+          host_numa_node: 1
           id: id
           hotplug_size: 1
         - hugepages: false
           shared: false
+          hugepage_size: 1
           mergeable: false
           file: file
-          size: 4
-          hotplugged_size: 1
-          host_numa_node: 7
+          size: 7
+          hotplugged_size: 6
+          host_numa_node: 1
           id: id
           hotplug_size: 1
         hotplug_size: 3
@@ -945,6 +982,9 @@ components:
         hugepages:
           default: false
           type: boolean
+        hugepage_size:
+          format: int64
+          type: integer
         zones:
           items:
             $ref: '#/components/schemas/MemoryZoneConfig'
@@ -983,10 +1023,10 @@ components:
     DiskConfig:
       example:
         path: path
-        num_queues: 1
+        num_queues: 7
         readonly: false
         iommu: false
-        queue_size: 6
+        queue_size: 1
         vhost_socket: vhost_socket
         vhost_user: false
         direct: false
@@ -1026,14 +1066,17 @@ components:
     NetConfig:
       example:
         tap: tap
-        num_queues: 7
+        num_queues: 4
         iommu: false
-        queue_size: 1
+        queue_size: 5
         vhost_socket: vhost_socket
         vhost_user: false
         ip: 192.168.249.1
         id: id
         mac: mac
+        fd:
+        - 9
+        - 9
         mask: 255.255.255.0
       properties:
         tap:
@@ -1063,6 +1106,11 @@ components:
           type: string
         id:
           type: string
+        fd:
+          items:
+            format: int32
+            type: integer
+          type: array
       type: object
     RngConfig:
       example:
@@ -1080,7 +1128,7 @@ components:
       type: object
     BalloonConfig:
       example:
-        size: 4
+        size: 9
       properties:
         size:
           format: int64
@@ -1090,8 +1138,8 @@ components:
       type: object
     FsConfig:
       example:
-        num_queues: 5
-        queue_size: 9
+        num_queues: 6
+        queue_size: 8
         cache_size: 9
         dax: true
         tag: tag
@@ -1163,6 +1211,7 @@ components:
         mode:
           enum:
           - "false"
+          - Pty
           - Tty
           - File
           - null
@@ -1216,7 +1265,7 @@ components:
     SgxEpcConfig:
       example:
         prefault: false
-        size: 9
+        size: 6
       properties:
         size:
           format: int64
@@ -1229,7 +1278,7 @@ components:
       type: object
     NumaDistance:
       example:
-        distance: 1
+        distance: 6
         destination: 6
       properties:
         destination:
@@ -1245,17 +1294,17 @@ components:
     NumaConfig:
       example:
         distances:
-        - distance: 1
+        - distance: 6
           destination: 6
-        - distance: 1
+        - distance: 6
           destination: 6
         cpus:
-        - 3
-        - 3
+        - 2
+        - 2
         memory_zones:
         - memory_zones
         - memory_zones
-        guest_numa_id: 6
+        guest_numa_id: 1
       properties:
         guest_numa_id:
           format: int32

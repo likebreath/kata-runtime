@@ -134,6 +134,18 @@ paths:
         405:
           description: The VM instance could not reboot because it is not booted.
 
+  /vm.power-button:
+    put:
+      summary: Trigger a power button in the VM
+      operationId: power-buttonVM
+      responses:
+        204:
+          description: Power button successfully triggered in the VM
+        404:
+          description: The button could not be triggered because it is not created yet
+        405:
+          description: The button could not be triggered because it is not booted.
+
   /vm.resize:
     put:
       summary: Resize the VM
@@ -386,7 +398,7 @@ components:
         pci_bdf:
           type: integer
           format: int32
-        
+
     VmCounters:
       type: object
       additionalProperties:
@@ -522,6 +534,9 @@ components:
         hugepages:
           type: boolean
           default: false
+        hugepage_size:
+          type: integer
+          format: int64
         host_numa_node:
           type: integer
           format: int32
@@ -559,6 +574,9 @@ components:
         hugepages:
           type: boolean
           default: false
+        hugepage_size:
+          type: integer
+          format: int64
         zones:
           type: array
           items:
@@ -652,6 +670,11 @@ components:
           type: string
         id:
           type: string
+        fd:
+          type: array
+          items:
+            type: integer
+            format: int32
 
     RngConfig:
       required:
@@ -735,7 +758,7 @@ components:
           type: string
         mode:
           type: string
-          enum: [Off, Tty, File, Null]
+          enum: [Off, Pty, Tty, File, Null]
         iommu:
           type: boolean
           default: false

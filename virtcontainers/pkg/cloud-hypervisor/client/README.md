@@ -36,6 +36,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**CreateVM**](docs/DefaultApi.md#createvm) | **Put** /vm.create | Create the cloud-hypervisor Virtual Machine (VM) instance. The instance is not booted, only created.
 *DefaultApi* | [**DeleteVM**](docs/DefaultApi.md#deletevm) | **Put** /vm.delete | Delete the cloud-hypervisor Virtual Machine (VM) instance.
 *DefaultApi* | [**PauseVM**](docs/DefaultApi.md#pausevm) | **Put** /vm.pause | Pause a previously booted VM instance.
+*DefaultApi* | [**PowerButtonVM**](docs/DefaultApi.md#powerbuttonvm) | **Put** /vm.power-button | Trigger a power button in the VM
 *DefaultApi* | [**RebootVM**](docs/DefaultApi.md#rebootvm) | **Put** /vm.reboot | Reboot the VM instance.
 *DefaultApi* | [**ResumeVM**](docs/DefaultApi.md#resumevm) | **Put** /vm.resume | Resume a previously paused VM instance.
 *DefaultApi* | [**ShutdownVM**](docs/DefaultApi.md#shutdownvm) | **Put** /vm.shutdown | Shut the VM instance down.
